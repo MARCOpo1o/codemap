@@ -20,6 +20,7 @@ import type { ExperienceLevel, ProjectSpec, ProjectTemplate, TeamMode } from "@/
 interface ProjectWizardProps {
   templates: ProjectTemplate[];
   initialSpec?: ProjectSpec | null;
+  initialTemplateId?: string;
   onGenerate: (spec: ProjectSpec) => void;
 }
 
@@ -38,7 +39,11 @@ function defaultCoreFeatureIds(template: ProjectTemplate | undefined): string[] 
   return template.features.filter((feature) => feature.core).map((feature) => feature.id);
 }
 
-function draftFromSpec(spec: ProjectSpec | null | undefined, templates: ProjectTemplate[]): Draft {
+function draftFromSpec(
+  spec: ProjectSpec | null | undefined,
+  templates: ProjectTemplate[],
+  initialTemplateId?: string
+): Draft {
   if (spec) {
     return {
       name: spec.name,
@@ -50,7 +55,8 @@ function draftFromSpec(spec: ProjectSpec | null | undefined, templates: ProjectT
       teamMode: spec.teamMode,
     };
   }
-  const firstTemplate = templates[0];
+  const preselected = templates.find((template) => template.id === initialTemplateId);
+  const firstTemplate = preselected ?? templates[0];
   return {
     name: "",
     templateId: firstTemplate?.id ?? "",
@@ -64,9 +70,16 @@ function draftFromSpec(spec: ProjectSpec | null | undefined, templates: ProjectT
 
 const STEP_LABELS = ["Basics", "Features", "Context"];
 
-export function ProjectWizard({ templates, initialSpec, onGenerate }: ProjectWizardProps) {
+export function ProjectWizard({
+  templates,
+  initialSpec,
+  initialTemplateId,
+  onGenerate,
+}: ProjectWizardProps) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<Draft>(() => draftFromSpec(initialSpec, templates));
+  const [draft, setDraft] = useState<Draft>(() =>
+    draftFromSpec(initialSpec, templates, initialTemplateId)
+  );
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === draft.templateId),

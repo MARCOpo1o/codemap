@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ProjectMapView } from "@/components/map/ProjectMapView";
 import { ProjectWizard } from "@/components/wizard/ProjectWizard";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,16 @@ import { clearLastSpec, loadLastSpec, saveLastSpec } from "@/lib/persistence";
 import { getTemplate, templates } from "@/templates";
 
 export default function BuilderPage() {
+  return (
+    <Suspense fallback={null}>
+      <BuilderContent />
+    </Suspense>
+  );
+}
+
+function BuilderContent() {
+  const searchParams = useSearchParams();
+  const initialTemplateId = searchParams.get("template") ?? undefined;
   const [spec, setSpec] = useState<ProjectSpec | null>(null);
   const [restoredSpec, setRestoredSpec] = useState<ProjectSpec | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -55,7 +66,12 @@ export default function BuilderPage() {
           <ProjectMapView map={map} />
         </>
       ) : (
-        <ProjectWizard templates={templates} initialSpec={restoredSpec} onGenerate={handleGenerate} />
+        <ProjectWizard
+          templates={templates}
+          initialSpec={restoredSpec}
+          initialTemplateId={initialTemplateId}
+          onGenerate={handleGenerate}
+        />
       )}
     </main>
   );
