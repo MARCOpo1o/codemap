@@ -1,6 +1,8 @@
 {
   "name": "codemap",
   "version": "0.1.0",
+  "description": "Turn app ideas into structured project maps: screens, components, data models, GitHub issues, milestones, and README drafts.",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",
