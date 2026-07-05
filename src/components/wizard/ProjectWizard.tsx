@@ -156,7 +156,11 @@ export function ProjectWizard({
               <Label htmlFor="template">Project category</Label>
               <Select value={draft.templateId} onValueChange={handleTemplateChange}>
                 <SelectTrigger id="template" className="w-full">
-                  <SelectValue placeholder="Choose a template" />
+                  <SelectValue placeholder="Choose a template">
+                    {(value: string | null) =>
+                      templates.find((template) => template.id === value)?.label ?? "Choose a template"
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((template) => (

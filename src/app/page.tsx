@@ -32,7 +32,7 @@ export default function Home() {
           bootcamps, hackathon teams, and anyone learning to plan software before they build it.
         </p>
         <div className="flex justify-center sm:justify-start">
-          <Button size="lg" render={<Link href="/builder" />}>
+          <Button size="lg" nativeButton={false} render={<Link href="/builder" />}>
             Start a project map
           </Button>
         </div>
