@@ -12,7 +12,7 @@ function buildSpec(overrides: Partial<ProjectSpec> = {}): ProjectSpec {
     experienceLevel: "new",
     selectedFeatureIds: ["deck-list", "card-review", "create-card"],
     teamMode: "solo",
-    stack: "expo-react-native",
+    stack: "nextjs-web",
     ...overrides,
   };
 }
@@ -34,7 +34,8 @@ describe("generateProjectMap", () => {
     const map = generateProjectMap(buildSpec({ selectedFeatureIds: ["deck-list"] }), flashcardApp);
 
     const titles = map.issues.map((issue) => issue.title);
-    expect(titles).toContain("Initialize the Expo app");
+    expect(titles).toContain("Create your Next.js app and see it in the browser");
+    expect(titles).toContain("Put your website on the internet");
     expect(titles).toContain("Show a list of decks on the home screen");
     expect(titles).not.toContain("Build the card review flow");
   });
@@ -82,5 +83,17 @@ describe("generateProjectMap", () => {
 
     expect(appDir).toBeDefined();
     expect(appDir?.type).toBe("dir");
+  });
+
+  it("maps a screen's route path to the right file per stack", () => {
+    const web = generateProjectMap(buildSpec({ stack: "nextjs-web" }), flashcardApp);
+    const expo = generateProjectMap(buildSpec({ stack: "expo-react-native" }), flashcardApp);
+
+    const webReview = web.screens.find((screen) => screen.id === "review");
+    const expoReview = expo.screens.find((screen) => screen.id === "review");
+
+    expect(webReview?.routePath).toBe("/decks/[deckId]/review");
+    expect(webReview?.routeFile).toBe("app/decks/[deckId]/review/page.tsx");
+    expect(expoReview?.routeFile).toBe("app/decks/[deckId]/review/index.tsx");
   });
 });

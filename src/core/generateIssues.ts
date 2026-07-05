@@ -10,6 +10,39 @@ interface SetupIssue {
 }
 
 function setupIssuesFor(stack: StackId): SetupIssue[] {
+  if (stack === "nextjs-web") {
+    return [
+      {
+        id: "issue-setup-init",
+        title: "Create your Next.js app and see it in the browser",
+        summary:
+          "Get a blank website running on your own computer before adding any features.",
+        tasks: [
+          "Run `npx create-next-app@latest` and answer the prompts (say yes to TypeScript)",
+          "Start it with `npm run dev`",
+          "Open http://localhost:3000 in your browser — this is your website",
+          "Change some text in `app/page.tsx`, save, and watch the browser update",
+          "Commit the initial project as-is",
+        ],
+        acceptanceCriteria: [
+          "The site loads at http://localhost:3000 with no errors",
+          "You changed something in app/page.tsx and saw it appear in the browser",
+        ],
+      },
+      {
+        id: "issue-setup-structure",
+        title: "Set up the project's folder structure",
+        summary: "Create the folders the rest of the issues will build into.",
+        tasks: [
+          "Create components/, models/, and lib/ directories",
+          "Add placeholder files so each folder is tracked by git",
+        ],
+        acceptanceCriteria: [
+          "The project matches the suggested file tree before feature work starts",
+        ],
+      },
+    ];
+  }
   if (stack === "expo-react-native") {
     return [
       {
@@ -33,6 +66,32 @@ function setupIssuesFor(stack: StackId): SetupIssue[] {
         ],
         acceptanceCriteria: [
           "The project matches the suggested file tree before feature work starts",
+        ],
+      },
+    ];
+  }
+  return [];
+}
+
+/** Fixed wrap-up issues appended after feature work, per stack. */
+function polishIssuesFor(stack: StackId): SetupIssue[] {
+  if (stack === "nextjs-web") {
+    return [
+      {
+        id: "issue-polish-deploy",
+        title: "Put your website on the internet",
+        summary:
+          "Deploy the app so anyone can visit it at a real URL — not just on your computer.",
+        tasks: [
+          "Push your latest work to GitHub",
+          "Sign in to vercel.com with your GitHub account",
+          "Import your repository and click Deploy",
+          "Open the URL Vercel gives you and test the app there",
+          "Add the live URL to the top of your README",
+        ],
+        acceptanceCriteria: [
+          "The app works at a public URL anyone can open",
+          "The README links to the live site",
         ],
       },
     ];
@@ -99,6 +158,7 @@ export function generateIssues(
   stack: StackId
 ): GithubIssueSpec[] {
   const setupIssues = setupIssuesFor(stack);
+  const polishIssues = polishIssuesFor(stack);
   const featureIssues = selectedFeatures.flatMap((feature) => feature.issues);
 
   const titleById = new Map<string, string>();
@@ -127,5 +187,14 @@ export function generateIssues(
       .filter((title): title is string => Boolean(title)),
   }));
 
-  return [...generatedSetupIssues, ...generatedFeatureIssues];
+  const generatedPolishIssues: GithubIssueSpec[] = polishIssues.map((issue) => ({
+    id: issue.id,
+    title: issue.title,
+    body: buildSetupIssueBody(issue),
+    labels: ["deploy"],
+    milestone: MILESTONE_NAMES.polish,
+    dependsOn: [],
+  }));
+
+  return [...generatedSetupIssues, ...generatedFeatureIssues, ...generatedPolishIssues];
 }

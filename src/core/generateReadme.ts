@@ -8,6 +8,20 @@ import type {
 } from "./types";
 
 function gettingStartedFor(stack: StackId): string {
+  if (stack === "nextjs-web") {
+    return [
+      "This project is a Next.js website (React + TypeScript).",
+      "",
+      "```bash",
+      "npm install",
+      "npm run dev",
+      "```",
+      "",
+      "Open [http://localhost:3000](http://localhost:3000) in your browser. Editing a file under `app/` updates the page automatically.",
+      "",
+      "When you're ready to share it, deploy for free on [Vercel](https://vercel.com/new) by importing this repository.",
+    ].join("\n");
+  }
   if (stack === "expo-react-native") {
     return [
       "This project targets Expo (React Native + TypeScript).",

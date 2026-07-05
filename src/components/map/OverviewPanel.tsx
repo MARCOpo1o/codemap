@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { STACK_LABELS } from "@/core/stackLabels";
 import type { ProjectMap } from "@/core/types";
 
 export function OverviewPanel({ map }: { map: ProjectMap }) {
@@ -14,7 +15,7 @@ export function OverviewPanel({ map }: { map: ProjectMap }) {
           <div className="flex flex-wrap gap-1.5">
             <Badge variant="secondary">{map.templateLabel}</Badge>
             <Badge variant="secondary">{map.spec.teamMode === "team" ? "Team project" : "Solo project"}</Badge>
-            <Badge variant="secondary">Expo (React Native)</Badge>
+            <Badge variant="secondary">{STACK_LABELS[map.spec.stack]}</Badge>
           </div>
         </CardContent>
       </Card>

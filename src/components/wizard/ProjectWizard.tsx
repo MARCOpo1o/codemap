@@ -124,7 +124,7 @@ export function ProjectWizard({
       experienceLevel: draft.experienceLevel,
       selectedFeatureIds: draft.selectedFeatureIds,
       teamMode: draft.teamMode,
-      stack: "expo-react-native",
+      stack: "nextjs-web",
     };
     onGenerate(spec);
   }
@@ -261,7 +261,8 @@ export function ProjectWizard({
             </div>
 
             <p className="text-sm text-muted-foreground">
-              Target stack: Expo (React Native + TypeScript).
+              Target stack: Next.js website — runs with{" "}
+              <code className="font-mono text-xs">npm run dev</code>, viewable in any browser.
             </p>
           </div>
         )}
