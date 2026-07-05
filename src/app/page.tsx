@@ -1,65 +1,75 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { templates } from "@/templates";
+
+const STEPS = [
+  {
+    title: "Answer a few questions",
+    body: "Name your project, pick a category, and describe the problem it solves and who it's for.",
+  },
+  {
+    title: "Get a project map",
+    body: "CodeMap generates screens, components, data models, a file tree, GitHub issues, and milestones — all connected to each other.",
+  },
+  {
+    title: "Build with a plan",
+    body: "Follow the milestones, work through the issues, and use the README draft to explain what you built.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-16 px-4 py-16">
+      <section className="flex flex-col gap-4 text-center sm:text-left">
+        <h1 className="text-3xl font-semibold tracking-tight">CodeMap</h1>
+        <p className="text-xl text-muted-foreground">
+          Turn an app idea into a structured project map: screens, components, data models,
+          GitHub issues, milestones, and a README draft.
+        </p>
+        <p className="text-muted-foreground">
+          Built for builders working on their first serious app project — student clubs,
+          bootcamps, hackathon teams, and anyone learning to plan software before they build it.
+        </p>
+        <div className="flex justify-center sm:justify-start">
+          <Button size="lg" render={<Link href="/builder" />}>
+            Start a project map
+          </Button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-medium">How it works</h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {STEPS.map((step, index) => (
+            <Card key={step.title}>
+              <CardHeader>
+                <CardDescription>Step {index + 1}</CardDescription>
+                <CardTitle className="text-base">{step.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{step.body}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-medium">Project templates</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {templates.map((template) => (
+            <Link key={template.id} href={`/builder?template=${template.id}`}>
+              <Card className="h-full transition-colors hover:bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-base">{template.label}</CardTitle>
+                  <CardDescription>{template.shortDescription}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </main>
   );
 }
