@@ -244,6 +244,22 @@ export interface TaskArea {
   sharedTouchpoints: string[];
 }
 
+export interface GettingStartedStep {
+  title: string;
+  body: string;
+}
+
+export interface GlossaryTerm {
+  term: string;
+  definition: string;
+}
+
+/** A first-run walkthrough (install -> run -> see it -> change it) plus a plain-language glossary. */
+export interface GettingStartedSpec {
+  steps: GettingStartedStep[];
+  glossary: GlossaryTerm[];
+}
+
 /**
  * The ProjectMap is CodeMap's core object: a complete, cross-referenced plan
  * connecting features to screens, components, data models, files, issues,
@@ -262,4 +278,5 @@ export interface ProjectMap {
   readme: ReadmeSpec;
   learningNotes: LearningNote[];
   taskSplit?: TaskArea[];
+  gettingStarted: GettingStartedSpec;
 }

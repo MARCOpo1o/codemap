@@ -2,6 +2,7 @@
 
 import { DataModelPanel } from "@/components/map/DataModelPanel";
 import { FileTreePreview } from "@/components/map/FileTreePreview";
+import { GettingStartedPanel } from "@/components/map/GettingStartedPanel";
 import { IssueList } from "@/components/map/IssueList";
 import { LearningNotesPanel } from "@/components/map/LearningNotesPanel";
 import { OverviewPanel } from "@/components/map/OverviewPanel";
@@ -13,8 +14,9 @@ import type { ProjectMap } from "@/core/types";
 
 export function ProjectMapView({ map }: { map: ProjectMap }) {
   return (
-    <Tabs defaultValue="overview" className="w-full">
+    <Tabs defaultValue="getting-started" className="w-full">
       <TabsList className="flex-wrap">
+        <TabsTrigger value="getting-started">Getting Started</TabsTrigger>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="screens">Screens</TabsTrigger>
         <TabsTrigger value="data">Data</TabsTrigger>
@@ -25,6 +27,9 @@ export function ProjectMapView({ map }: { map: ProjectMap }) {
         {map.taskSplit && <TabsTrigger value="team">Team Split</TabsTrigger>}
       </TabsList>
 
+      <TabsContent value="getting-started" className="pt-4">
+        <GettingStartedPanel gettingStarted={map.gettingStarted} />
+      </TabsContent>
       <TabsContent value="overview" className="pt-4">
         <OverviewPanel map={map} />
       </TabsContent>

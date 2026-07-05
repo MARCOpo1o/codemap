@@ -1,6 +1,7 @@
 import { generateComponents } from "./generateComponents";
 import { generateDataModels } from "./generateDataModels";
 import { generateFileTree } from "./generateFileTree";
+import { generateGettingStarted } from "./generateGettingStarted";
 import { generateIssues } from "./generateIssues";
 import { generateLearningNotes } from "./generateLearningNotes";
 import { generateMilestones } from "./generateMilestones";
@@ -38,6 +39,7 @@ export function generateProjectMap(spec: ProjectSpec, template: ProjectTemplate)
     spec.teamMode === "team"
       ? generateTaskSplit(selectedFeatures, screens, components, dataModels, issues)
       : undefined;
+  const gettingStarted = generateGettingStarted(spec);
 
   return {
     spec,
@@ -52,5 +54,6 @@ export function generateProjectMap(spec: ProjectSpec, template: ProjectTemplate)
     readme,
     learningNotes,
     taskSplit,
+    gettingStarted,
   };
 }

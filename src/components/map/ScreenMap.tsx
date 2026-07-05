@@ -13,6 +13,10 @@ export function ScreenMap({
 
   return (
     <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">
+        Each screen below is one page on your website. "File to edit" is the exact file you open
+        to build it — save that file and refresh the page at that URL to see your change.
+      </p>
       {screens.map((screen) => (
         <Card key={screen.id}>
           <CardHeader>
@@ -21,9 +25,12 @@ export function ScreenMap({
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             <p className="text-xs text-muted-foreground">
-              Page URL: <span className="font-mono">{screen.routePath}</span>
-              {" · "}
-              File: <span className="font-mono">{screen.routeFile}</span>
+              <span className="font-medium text-foreground">Page URL:</span>{" "}
+              <span className="font-mono">{screen.routePath}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">File to edit:</span>{" "}
+              <span className="font-mono">{screen.routeFile}</span>
             </p>
             {screen.componentIds.length > 0 && (
               <div className="flex flex-wrap gap-1.5">

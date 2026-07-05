@@ -96,4 +96,12 @@ describe("generateProjectMap", () => {
     expect(webReview?.routeFile).toBe("app/decks/[deckId]/review/page.tsx");
     expect(expoReview?.routeFile).toBe("app/decks/[deckId]/review/index.tsx");
   });
+
+  it("includes a getting-started walkthrough and glossary, with the project name interpolated", () => {
+    const map = generateProjectMap(buildSpec({ name: "BioCards" }), flashcardApp);
+
+    expect(map.gettingStarted.steps.length).toBeGreaterThan(0);
+    expect(map.gettingStarted.glossary.length).toBeGreaterThan(0);
+    expect(map.gettingStarted.steps.some((step) => step.body.includes("BioCards"))).toBe(true);
+  });
 });
