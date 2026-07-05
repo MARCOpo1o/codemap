@@ -7,22 +7,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { StartChoice } from "@/components/wizard/StartChoice";
+import { newThingDraft, ThingsEditor, type ThingDraft } from "@/components/wizard/ThingsEditor";
 import { Textarea } from "@/components/ui/textarea";
-import type { ExperienceLevel, ProjectSpec, ProjectTemplate, TeamMode } from "@/core/types";
+import { buildCustomTemplate } from "@/core/blocks";
+import { toKebabCase } from "@/core/naming";
+import { CUSTOM_TEMPLATE_ID } from "@/core/types";
+import type { ExperienceLevel, ProjectSpec, ProjectTemplate, TeamMode, ThingSpec } from "@/core/types";
 
 interface ProjectWizardProps {
   templates: ProjectTemplate[];
   initialSpec?: ProjectSpec | null;
   initialTemplateId?: string;
+  initialMode?: "preset" | "custom";
   onGenerate: (spec: ProjectSpec) => void;
 }
+
+type Mode = "start" | "preset" | "custom";
 
 type Draft = {
   name: string;
@@ -30,6 +31,7 @@ type Draft = {
   targetUser: string;
   problemStatement: string;
   selectedFeatureIds: string[];
+  thingDrafts: ThingDraft[];
   experienceLevel: ExperienceLevel;
   teamMode: TeamMode;
 };
@@ -37,6 +39,44 @@ type Draft = {
 function defaultCoreFeatureIds(template: ProjectTemplate | undefined): string[] {
   if (!template) return [];
   return template.features.filter((feature) => feature.core).map((feature) => feature.id);
+}
+
+function emptyDraft(): Draft {
+  return {
+    name: "",
+    templateId: "",
+    targetUser: "",
+    problemStatement: "",
+    selectedFeatureIds: [],
+    thingDrafts: [newThingDraft("thing-1")],
+    experienceLevel: "developing",
+    teamMode: "solo",
+  };
+}
+
+function thingDraftsFromSpec(spec: ProjectSpec): ThingDraft[] {
+  if (!spec.things || spec.things.length === 0) return [newThingDraft("thing-1")];
+  return spec.things.map((thing) => ({
+    key: thing.id,
+    name: thing.name,
+    fields: thing.fields.map((field) => ({ name: field.name, type: field.type })),
+    parentKey: thing.parentThingId,
+    blockIds: thing.blockIds,
+  }));
+}
+
+function initialModeFor(
+  spec: ProjectSpec | null | undefined,
+  templates: ProjectTemplate[],
+  initialTemplateId?: string,
+  initialCustom?: "preset" | "custom"
+): Mode {
+  if (spec) return spec.templateId === CUSTOM_TEMPLATE_ID ? "custom" : "preset";
+  if (initialCustom) return initialCustom;
+  if (initialTemplateId && templates.some((template) => template.id === initialTemplateId)) {
+    return "preset";
+  }
+  return "start";
 }
 
 function draftFromSpec(
@@ -51,35 +91,70 @@ function draftFromSpec(
       targetUser: spec.targetUser,
       problemStatement: spec.problemStatement,
       selectedFeatureIds: spec.selectedFeatureIds,
+      thingDrafts: thingDraftsFromSpec(spec),
       experienceLevel: spec.experienceLevel,
       teamMode: spec.teamMode,
     };
   }
   const preselected = templates.find((template) => template.id === initialTemplateId);
-  const firstTemplate = preselected ?? templates[0];
-  return {
-    name: "",
-    templateId: firstTemplate?.id ?? "",
-    targetUser: "",
-    problemStatement: "",
-    selectedFeatureIds: defaultCoreFeatureIds(firstTemplate),
-    experienceLevel: "developing",
-    teamMode: "solo",
-  };
+  const draft = emptyDraft();
+  if (preselected) {
+    draft.templateId = preselected.id;
+    draft.selectedFeatureIds = defaultCoreFeatureIds(preselected);
+  }
+  return draft;
 }
 
-const STEP_LABELS = ["Basics", "Features", "Context"];
+/** Turn ThingDrafts into ThingSpecs: derive a unique id from each name, drop blank fields, and resolve parent keys to parent ids. */
+function buildThingsFromDrafts(thingDrafts: ThingDraft[]): ThingSpec[] {
+  const usableDrafts = thingDrafts.filter((draft) => draft.name.trim().length > 0);
+  const idByKey = new Map<string, string>();
+  const usedIds = new Set<string>();
+
+  for (const draft of usableDrafts) {
+    const base = toKebabCase(draft.name);
+    let id = base;
+    let suffix = 2;
+    while (usedIds.has(id)) {
+      id = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    usedIds.add(id);
+    idByKey.set(draft.key, id);
+  }
+
+  return usableDrafts.map((draft) => ({
+    id: idByKey.get(draft.key)!,
+    name: draft.name.trim(),
+    fields: draft.fields
+      .filter((field) => field.name.trim().length > 0)
+      .map((field) => ({ name: field.name.trim(), type: field.type })),
+    parentThingId: draft.parentKey ? idByKey.get(draft.parentKey) : undefined,
+    blockIds: draft.blockIds,
+  }));
+}
+
+function stepLabelsFor(mode: Mode): string[] {
+  const middle = mode === "custom" ? "Things & Blocks" : "Features";
+  return ["Start", "Basics", middle, "Context"];
+}
 
 export function ProjectWizard({
   templates,
   initialSpec,
   initialTemplateId,
+  initialMode,
   onGenerate,
 }: ProjectWizardProps) {
-  const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<Mode>(() =>
+    initialModeFor(initialSpec, templates, initialTemplateId, initialMode)
+  );
+  const [step, setStep] = useState(() => (mode === "start" ? 0 : 1));
   const [draft, setDraft] = useState<Draft>(() =>
     draftFromSpec(initialSpec, templates, initialTemplateId)
   );
+
+  const stepLabels = stepLabelsFor(mode);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === draft.templateId),
@@ -90,13 +165,16 @@ export function ProjectWizard({
     setDraft((current) => ({ ...current, ...patch }));
   }
 
-  function handleTemplateChange(templateId: string | null) {
-    if (!templateId) return;
-    const nextTemplate = templates.find((template) => template.id === templateId);
-    updateDraft({
-      templateId,
-      selectedFeatureIds: defaultCoreFeatureIds(nextTemplate),
-    });
+  function choosePreset(templateId: string) {
+    const template = templates.find((t) => t.id === templateId);
+    setMode("preset");
+    updateDraft({ templateId, selectedFeatureIds: defaultCoreFeatureIds(template) });
+    setStep(1);
+  }
+
+  function chooseScratch() {
+    setMode("custom");
+    setStep(1);
   }
 
   function toggleFeature(featureId: string, checked: boolean) {
@@ -113,18 +191,40 @@ export function ProjectWizard({
     draft.targetUser.trim().length > 0 &&
     draft.problemStatement.trim().length > 0;
   const featuresComplete = draft.selectedFeatureIds.length > 0;
+  const thingsComplete = draft.thingDrafts.some(
+    (thing) => thing.name.trim().length > 0 && thing.blockIds.length > 0
+  );
+  const middleStepComplete = mode === "custom" ? thingsComplete : featuresComplete;
 
   function handleSubmit() {
-    if (!selectedTemplate) return;
+    if (mode === "preset") {
+      if (!selectedTemplate) return;
+      const spec: ProjectSpec = {
+        name: draft.name.trim(),
+        templateId: draft.templateId,
+        targetUser: draft.targetUser.trim(),
+        problemStatement: draft.problemStatement.trim(),
+        experienceLevel: draft.experienceLevel,
+        selectedFeatureIds: draft.selectedFeatureIds,
+        teamMode: draft.teamMode,
+        stack: "nextjs-web",
+      };
+      onGenerate(spec);
+      return;
+    }
+
+    const things = buildThingsFromDrafts(draft.thingDrafts);
+    const customTemplate = buildCustomTemplate(things);
     const spec: ProjectSpec = {
       name: draft.name.trim(),
-      templateId: draft.templateId,
+      templateId: CUSTOM_TEMPLATE_ID,
       targetUser: draft.targetUser.trim(),
       problemStatement: draft.problemStatement.trim(),
       experienceLevel: draft.experienceLevel,
-      selectedFeatureIds: draft.selectedFeatureIds,
+      selectedFeatureIds: customTemplate.features.map((feature) => feature.id),
       teamMode: draft.teamMode,
       stack: "nextjs-web",
+      things,
     };
     onGenerate(spec);
   }
@@ -133,7 +233,7 @@ export function ProjectWizard({
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <CardTitle>
-          Step {step + 1} of {STEP_LABELS.length}: {STEP_LABELS[step]}
+          Step {step + 1} of {stepLabels.length}: {stepLabels[step]}
         </CardTitle>
         <CardDescription>
           Answer a few questions and CodeMap will generate a project map you can build from.
@@ -141,6 +241,10 @@ export function ProjectWizard({
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {step === 0 && (
+          <StartChoice templates={templates} onChoosePreset={choosePreset} onChooseScratch={chooseScratch} />
+        )}
+
+        {step === 1 && (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="project-name">Project name</Label>
@@ -153,35 +257,12 @@ export function ProjectWizard({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="template">Project category</Label>
-              <Select value={draft.templateId} onValueChange={handleTemplateChange}>
-                <SelectTrigger id="template" className="w-full">
-                  <SelectValue placeholder="Choose a template">
-                    {(value: string | null) =>
-                      templates.find((template) => template.id === value)?.label ?? "Choose a template"
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedTemplate && (
-                <p className="text-sm text-muted-foreground">{selectedTemplate.shortDescription}</p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
               <Label htmlFor="target-user">Who is this for?</Label>
               <Input
                 id="target-user"
                 value={draft.targetUser}
                 onChange={(event) => updateDraft({ targetUser: event.target.value })}
-                placeholder={selectedTemplate?.exampleTargetUser}
+                placeholder={selectedTemplate?.exampleTargetUser ?? "A student studying for an exam"}
               />
             </div>
 
@@ -191,14 +272,26 @@ export function ProjectWizard({
                 id="problem-statement"
                 value={draft.problemStatement}
                 onChange={(event) => updateDraft({ problemStatement: event.target.value })}
-                placeholder={selectedTemplate?.exampleProblemStatement}
+                placeholder={
+                  selectedTemplate?.exampleProblemStatement ?? "Describe the problem your app solves."
+                }
                 rows={3}
               />
             </div>
+
+            <p className="text-sm text-muted-foreground">
+              {mode === "preset" && selectedTemplate
+                ? `Starting from: ${selectedTemplate.label}`
+                : "Starting from scratch"}{" "}
+              —{" "}
+              <button type="button" className="underline" onClick={() => setStep(0)}>
+                change
+              </button>
+            </p>
           </div>
         )}
 
-        {step === 1 && selectedTemplate && (
+        {step === 2 && mode === "preset" && selectedTemplate && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Pick the features your first version should include. You can always add more later.
@@ -221,7 +314,14 @@ export function ProjectWizard({
           </div>
         )}
 
-        {step === 2 && (
+        {step === 2 && mode === "custom" && (
+          <ThingsEditor
+            things={draft.thingDrafts}
+            onChange={(thingDrafts) => updateDraft({ thingDrafts })}
+          />
+        )}
+
+        {step === 3 && (
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <Label>How familiar are you with building apps?</Label>
@@ -267,23 +367,25 @@ export function ProjectWizard({
           </div>
         )}
 
-        <div className="flex justify-between pt-2">
-          <Button variant="outline" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
-            Back
-          </Button>
-          {step < STEP_LABELS.length - 1 ? (
-            <Button
-              onClick={() => setStep((s) => s + 1)}
-              disabled={step === 0 ? !basicsComplete : !featuresComplete}
-            >
-              Next
+        {step > 0 && (
+          <div className="flex justify-between pt-2">
+            <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
+              Back
             </Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={!basicsComplete || !featuresComplete}>
-              Generate project map
-            </Button>
-          )}
-        </div>
+            {step < stepLabels.length - 1 ? (
+              <Button
+                onClick={() => setStep((s) => s + 1)}
+                disabled={step === 1 ? !basicsComplete : !middleStepComplete}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={!basicsComplete || !middleStepComplete}>
+                Generate project map
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

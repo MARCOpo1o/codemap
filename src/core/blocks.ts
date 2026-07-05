@@ -27,6 +27,22 @@ function pluralize(word: string): string {
   return `${word}s`;
 }
 
+/** "a" or "an", based on whether the word starts with a vowel sound. */
+function article(word: string): string {
+  return /^[aeiou]/i.test(word) ? "an" : "a";
+}
+
+/** e.g. article("exercise") + " exercise" -> "an exercise" */
+function withArticle(word: string): string {
+  return `${article(word)} ${word}`;
+}
+
+/** Capitalized form for the start of a sentence: "A deck" / "An exercise". */
+function withCapitalizedArticle(word: string): string {
+  const a = article(word);
+  return `${a === "an" ? "An" : "A"} ${word}`;
+}
+
 function pluralSlug(thing: ThingSpec): string {
   return toKebabCase(pluralize(thing.name));
 }
@@ -110,7 +126,7 @@ function buildDataModel(thing: ThingSpec, things: ThingSpec[]): DataModelSpec {
   return {
     id: thing.id,
     name: thing.name,
-    description: `A ${thing.name.toLowerCase()} in the app.`,
+    description: `${withCapitalizedArticle(thing.name.toLowerCase())} in the app.`,
     fields,
   };
 }
@@ -153,7 +169,7 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
           {
             id: componentId,
             name: `${thing.name}Card`,
-            description: `Displays a ${lower}'s summary in the list.`,
+            description: `Displays ${withArticle(lower)}'s summary in the list.`,
             usedOnScreenIds: [screenId],
             dataModelIds: [thing.id],
           },
@@ -230,7 +246,7 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
               `Read the ${thing.id}Id route parameter`,
               `Load and display that ${lower}'s details`,
             ],
-            acceptanceCriteria: [`Opening a ${lower} shows its detail screen`],
+            acceptanceCriteria: [`Opening ${withArticle(lower)} shows its detail screen`],
             labels: ["feature"],
             milestoneId,
             dependsOnIssueIds: dependsOnIfSelected(thing, "list"),
@@ -261,7 +277,7 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
 
       return {
         id: `${thing.id}-create`,
-        label: `Create a ${lower}`,
+        label: `Create ${withArticle(lower)}`,
         description: `Form to add a new ${lower}.`,
         core: true,
         screens: [
@@ -279,10 +295,10 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
           {
             id: issueIdFor(thing, "create"),
             title: `Create a new ${lower}`,
-            summary: `Let a user add a ${lower} before doing anything else with it.`,
+            summary: `Let a user add ${withArticle(lower)} before doing anything else with it.`,
             tasks,
             acceptanceCriteria: [
-              `Submitting a valid form creates a ${lower} and saves it to storage`,
+              `Submitting a valid form creates ${withArticle(lower)} and saves it to storage`,
               "Missing required fields show a validation message instead of saving",
             ],
             labels: ["feature"],
@@ -308,7 +324,7 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
       const componentId = `${thing.id}-delete-button`;
       return {
         id: `${thing.id}-edit-delete`,
-        label: `Edit & delete a ${lower}`,
+        label: `Edit & delete ${withArticle(lower)}`,
         description: `Update or remove an existing ${lower}.`,
         screens: [
           {
@@ -332,8 +348,8 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
         issues: [
           {
             id: issueIdFor(thing, "edit-delete"),
-            title: `Edit and delete a ${lower}`,
-            summary: `Let a user change a ${lower}'s details or remove it entirely.`,
+            title: `Edit and delete ${withArticle(lower)}`,
+            summary: `Let a user change ${withArticle(lower)}'s details or remove it entirely.`,
             tasks: [
               "Prefill the form with the existing values",
               "Save changes back to storage",
@@ -374,14 +390,14 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
           : [];
       return {
         id: `${thing.id}-toggle`,
-        label: `Mark a ${lower} done`,
-        description: `A quick way to mark a ${lower} done or not done.`,
+        label: `Mark ${withArticle(lower)} done`,
+        description: `A quick way to mark ${withArticle(lower)} done or not done.`,
         screens: [],
         components: [
           {
             id: componentId,
             name: `${thing.name}ToggleButton`,
-            description: `Marks a ${lower} as done or not done.`,
+            description: `Marks ${withArticle(lower)} as done or not done.`,
             usedOnScreenIds: usedOn,
             dataModelIds: [thing.id],
           },
@@ -390,8 +406,8 @@ function buildFeatureForBlock(thing: ThingSpec, block: BlockId, things: ThingSpe
         issues: [
           {
             id: issueIdFor(thing, "toggle"),
-            title: `Mark a ${lower} as done`,
-            summary: `Let a user flip a ${lower} between done and not done.`,
+            title: `Mark ${withArticle(lower)} as done`,
+            summary: `Let a user flip ${withArticle(lower)} between done and not done.`,
             tasks: [
               `Make sure the ${thing.name} model has an isDone field`,
               "Add a toggle control that flips it",

@@ -56,8 +56,20 @@ export default function Home() {
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">Project templates</h2>
+        <h2 className="text-lg font-medium">Example presets — or describe your own idea</h2>
+        <p className="text-sm text-muted-foreground">
+          Presets are a fast starting point. If your idea doesn't match one, start from scratch
+          instead — you'll name your own things and pick what people can do with each one.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
+          <Link href="/builder?mode=custom">
+            <Card className="h-full transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <CardTitle className="text-base">Start from scratch</CardTitle>
+                <CardDescription>Describe your own idea — any app, any data.</CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
           {templates.map((template) => (
             <Link key={template.id} href={`/builder?template=${template.id}`}>
               <Card className="h-full transition-colors hover:bg-muted/50">
