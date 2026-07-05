@@ -26,10 +26,10 @@ function buildSummary(spec: ProjectSpec, template: ProjectTemplate): string {
 export function generateProjectMap(spec: ProjectSpec, template: ProjectTemplate): ProjectMap {
   const selectedFeatures = selectFeatures(spec, template);
 
-  const screens = generateScreens(selectedFeatures);
+  const screens = generateScreens(selectedFeatures, spec.stack);
   const components = generateComponents(selectedFeatures);
   const dataModels = generateDataModels(selectedFeatures);
-  const fileTree = generateFileTree(spec.name, screens, components, dataModels);
+  const fileTree = generateFileTree(spec.name, screens, components, dataModels, spec.stack);
   const issues = generateIssues(selectedFeatures, spec.experienceLevel, spec.stack);
   const milestones = generateMilestones(issues, template);
   const readme = generateReadme(spec, selectedFeatures, screens, dataModels);

@@ -1,24 +1,16 @@
-import type { ComponentSpec, DataModelSpec, FileNode, ScreenSpec } from "./types";
-
-function toKebabCase(name: string): string {
-  const slug = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return slug || "my-app";
-}
+import { toKebabCase } from "./naming";
+import type { ComponentSpec, DataModelSpec, FileNode, ScreenSpec, StackId } from "./types";
 
 function explainRouteSegment(segment: string): string {
   if (segment.startsWith("[") && segment.endsWith("]")) {
     const param = segment.slice(1, -1);
-    return `Dynamic route parameter: ${param}.`;
+    return `Dynamic route segment: the ${param} in the URL fills in this part.`;
   }
-  return `Groups the routes related to "${segment}".`;
+  return `This folder becomes "/${segment}" in the URL.`;
 }
 
-function insertRouteFile(root: FileNode, routeFile: string, explanation: string): void {
-  const segments = routeFile.split("/");
+function insertFile(root: FileNode, path: string, explanation: string): void {
+  const segments = path.split("/");
   let current = root;
 
   segments.forEach((segment, index) => {
@@ -41,31 +33,57 @@ function insertRouteFile(root: FileNode, routeFile: string, explanation: string)
 }
 
 /**
- * Build the suggested file tree for an Expo Router + TypeScript project:
- * one route file per screen, one component file per component, a shared
- * types file for data models, and a small storage helper.
+ * Build the suggested file tree: one route file per screen, one component
+ * file per component, a shared types file for data models, and a small
+ * storage helper. Layout and explanations adapt to the target stack.
  */
 export function generateFileTree(
   projectName: string,
   screens: ScreenSpec[],
   components: ComponentSpec[],
-  dataModels: DataModelSpec[]
+  dataModels: DataModelSpec[],
+  stack: StackId
 ): FileNode {
+  const isWeb = stack === "nextjs-web";
+
   const appDir: FileNode = {
     name: "app",
     type: "dir",
-    explanation: "Screens and navigation, following Expo Router file-based routing.",
+    explanation: isWeb
+      ? "Your pages. Each folder in here becomes part of the website's URL, and page.tsx is what shows at that URL."
+      : "Screens and navigation, following Expo Router file-based routing.",
     children: [],
   };
 
+  if (isWeb) {
+    appDir.children!.push(
+      {
+        name: "layout.tsx",
+        type: "file",
+        explanation: "Wraps every page. Shared navigation and the site title live here.",
+      },
+      {
+        name: "globals.css",
+        type: "file",
+        explanation: "Styles that apply to the whole site.",
+      }
+    );
+  }
+
   for (const screen of screens) {
-    insertRouteFile(appDir, screen.routeFile, `${screen.name} screen: ${screen.purpose}`);
+    // routeFile starts with "app/"; insert the remainder into the app dir.
+    const pathInApp = screen.routeFile.replace(/^app\//, "");
+    insertFile(
+      appDir,
+      pathInApp,
+      `${screen.name} — ${screen.purpose}${isWeb ? ` Shown at ${screen.routePath}` : ""}`
+    );
   }
 
   const componentsDir: FileNode = {
     name: "components",
     type: "dir",
-    explanation: "Reusable pieces of UI shared across screens.",
+    explanation: "Reusable pieces of UI shared across pages.",
     children: components.map((component) => ({
       name: `${component.name}.tsx`,
       type: "file",
@@ -97,7 +115,9 @@ export function generateFileTree(
       {
         name: "storage.ts",
         type: "file",
-        explanation: "Helpers for reading and writing app data to local device storage.",
+        explanation: isWeb
+          ? "Helpers for saving and loading your app's data in the browser's localStorage."
+          : "Helpers for reading and writing app data to local device storage.",
       },
     ],
   };

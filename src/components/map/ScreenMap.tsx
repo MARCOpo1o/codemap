@@ -20,7 +20,11 @@ export function ScreenMap({
             <CardDescription>{screen.purpose}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <p className="text-xs text-muted-foreground">{screen.routeFile}</p>
+            <p className="text-xs text-muted-foreground">
+              Page URL: <span className="font-mono">{screen.routePath}</span>
+              {" · "}
+              File: <span className="font-mono">{screen.routeFile}</span>
+            </p>
             {screen.componentIds.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {screen.componentIds.map((componentId) => {

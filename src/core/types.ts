@@ -12,7 +12,7 @@
 
 export type ExperienceLevel = "new" | "developing" | "confident";
 export type TeamMode = "solo" | "team";
-export type StackId = "expo-react-native";
+export type StackId = "nextjs-web" | "expo-react-native";
 
 /** Everything the builder tells us in the wizard. */
 export interface ProjectSpec {
@@ -47,8 +47,8 @@ export interface ScreenDef {
   id: string;
   name: string;
   purpose: string;
-  /** Route file inside the generated app's `app/` directory, e.g. "decks/[deckId].tsx". */
-  routeFile: string;
+  /** Stack-neutral URL path, e.g. "/decks/[deckId]/review". "/" is the home page. */
+  routePath: string;
   componentIds: string[];
 }
 
@@ -128,6 +128,9 @@ export interface ScreenSpec {
   id: string;
   name: string;
   purpose: string;
+  /** The URL where this screen lives, e.g. "/decks". */
+  routePath: string;
+  /** The file that renders it for the chosen stack, e.g. "app/decks/page.tsx". */
   routeFile: string;
   componentIds: string[];
   featureIds: string[];

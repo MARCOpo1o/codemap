@@ -1,4 +1,5 @@
-import type { FeatureDef, ScreenSpec } from "./types";
+import { routePathToFile } from "./naming";
+import type { FeatureDef, ScreenSpec, StackId } from "./types";
 
 /**
  * Merge screens from the selected features. Two features may contribute to
@@ -6,7 +7,7 @@ import type { FeatureDef, ScreenSpec } from "./types";
  * happens their component references are combined and both features are
  * credited on the resulting ScreenSpec.
  */
-export function generateScreens(selectedFeatures: FeatureDef[]): ScreenSpec[] {
+export function generateScreens(selectedFeatures: FeatureDef[], stack: StackId): ScreenSpec[] {
   const byId = new Map<string, ScreenSpec>();
 
   for (const feature of selectedFeatures) {
@@ -17,7 +18,8 @@ export function generateScreens(selectedFeatures: FeatureDef[]): ScreenSpec[] {
           id: screen.id,
           name: screen.name,
           purpose: screen.purpose,
-          routeFile: screen.routeFile,
+          routePath: screen.routePath,
+          routeFile: routePathToFile(screen.routePath, stack),
           componentIds: [...screen.componentIds],
           featureIds: [feature.id],
         });
