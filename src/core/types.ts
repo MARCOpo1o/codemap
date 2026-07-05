@@ -14,6 +14,12 @@ export type ExperienceLevel = "new" | "developing" | "confident";
 export type TeamMode = "solo" | "team";
 export type StackId = "nextjs-web" | "expo-react-native";
 
+/**
+ * Sentinel templateId meaning "build the ProjectTemplate from spec.things
+ * instead of looking one up in the template registry."
+ */
+export const CUSTOM_TEMPLATE_ID = "custom";
+
 /** Everything the builder tells us in the wizard. */
 export interface ProjectSpec {
   name: string;
@@ -24,6 +30,37 @@ export interface ProjectSpec {
   selectedFeatureIds: string[];
   teamMode: TeamMode;
   stack: StackId;
+  /** Present (and used) only when templateId === CUSTOM_TEMPLATE_ID. */
+  things?: ThingSpec[];
+}
+
+// ---------------------------------------------------------------------------
+// Compositional building blocks (custom, non-template projects)
+// ---------------------------------------------------------------------------
+
+export type ThingFieldType = "text" | "number" | "boolean" | "date";
+
+export interface ThingFieldSpec {
+  name: string;
+  type: ThingFieldType;
+}
+
+/** A single building block a builder can attach to a Thing. */
+export type BlockId = "list" | "detail" | "create" | "edit-delete" | "toggle" | "stats";
+
+/**
+ * A "thing" is a builder-named noun in their app — Deck, Habit, Event,
+ * Recipe, whatever they're building around. Blocks describe what the app
+ * can do with it; the engine expands each selected (thing, block) pair into
+ * a full FeatureDef using the same shape a hand-authored template uses.
+ */
+export interface ThingSpec {
+  id: string;
+  name: string;
+  fields: ThingFieldSpec[];
+  /** If set, this thing is nested under another thing (Card belongs to Deck). */
+  parentThingId?: string;
+  blockIds: BlockId[];
 }
 
 // ---------------------------------------------------------------------------
