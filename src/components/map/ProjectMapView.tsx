@@ -28,7 +28,7 @@ export function ProjectMapView({ map }: { map: ProjectMap }) {
       </TabsList>
 
       <TabsContent value="getting-started" className="pt-4">
-        <GettingStartedPanel gettingStarted={map.gettingStarted} />
+        <GettingStartedPanel map={map} />
       </TabsContent>
       <TabsContent value="overview" className="pt-4">
         <OverviewPanel map={map} />
