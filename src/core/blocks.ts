@@ -1,4 +1,4 @@
-import { toKebabCase } from "./naming";
+import { pluralize, toKebabCase } from "./naming";
 import { CUSTOM_TEMPLATE_ID } from "./types";
 import type {
   BlockId,
@@ -20,12 +20,6 @@ export const BLOCK_DEFINITIONS: Record<BlockId, { label: string; description: st
   toggle: { label: "Mark done", description: "A quick way to mark one done or not done." },
   stats: { label: "Stats", description: "A summary count shown alongside the list." },
 };
-
-function pluralize(word: string): string {
-  if (/[^aeiou]y$/i.test(word)) return `${word.slice(0, -1)}ies`;
-  if (/(s|x|z|ch|sh)$/i.test(word)) return `${word}es`;
-  return `${word}s`;
-}
 
 /** "a" or "an", based on whether the word starts with a vowel sound. */
 function article(word: string): string {
