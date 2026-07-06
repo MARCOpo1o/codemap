@@ -8,7 +8,7 @@ Going from "I have an app idea" to a project you can actually build and explain 
 
 ## What it generates
 
-Answer a short wizard — project name, category, target user, the problem you're solving, which features you want, your experience level, and whether you're building solo or with a team — and CodeMap generates a **project map**:
+Answer a short wizard — project name, target user, the problem you're solving, your experience level, and whether you're building solo or with a team — and CodeMap generates a **project map**:
 
 - A project summary and problem statement
 - Suggested screens and components
@@ -17,17 +17,24 @@ Answer a short wizard — project name, category, target user, the problem you'r
 - GitHub-ready issues, grouped into milestones
 - A README draft
 - Learning notes explaining the concepts each part of the project exercises
+- A Getting Started walkthrough and plain-language glossary for anyone running a project like this for the first time
 - An optional task split for team projects
+- A downloadable, runnable Next.js starter project matching the map — real pages, components, and data models, not just a plan
 
 Everything is cross-referenced: a screen points to the components it uses, an issue points to the concepts it teaches, a data model shows up everywhere it's used. It's meant to be read as a connected map, not a pile of separate lists.
 
+## Two ways to start
+
+- **Start from scratch**: name the "things" your app is about — a Deck, a Habit, an Event, a Recipe, whatever your idea needs — and pick what people should do with each one (see a list, view one in full, create one, edit or delete it, mark it done, see a count). CodeMap expands your choices into a full project map, including correctly nested routes when one thing belongs to another (a Card belonging to a Deck, an Exercise belonging to a Workout).
+- **Start from a preset**: pick a ready-made category like **Flashcard App** or **Habit Tracker** and adjust its feature checklist. Presets are worked examples, not the only path — CodeMap doesn't limit you to a fixed list of project types.
+
 ## Demo flow
 
-1. Pick a template — for example, **Flashcard App**.
+1. Pick a preset — for example, **Flashcard App** — or start from scratch and name your own things.
 2. Describe the problem: "Biology students need a fast way to review vocabulary before exams."
-3. Pick features: deck list, card review, create card, progress tracking.
+3. Pick features (or things and blocks, if starting from scratch).
 4. Pick your experience level.
-5. Get a project map with Home, Deck List, Review, and Create Card screens; DeckCard and FlashcardCard components; Deck and Card data models; a file tree; GitHub issues; milestones; a README draft; and learning notes.
+5. Get a project map with screens, components, data models, a file tree, GitHub issues, milestones, a README draft, learning notes, and a downloadable starter project.
 
 ## Why project maps are useful
 
@@ -44,7 +51,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000), click **Start a project map**, and answer the wizard.
 
-CodeMap is deterministic and template-driven — no AI, no account, no backend. Your answers and the last generated map are kept in your browser's local storage.
+CodeMap is deterministic — no AI, no account, no backend. Your answers and the last generated map are kept in your browser's local storage. Generated projects target Next.js (React + TypeScript): `npm install && npm run dev`, viewable in any browser.
 
 ## Example output
 
@@ -67,7 +74,7 @@ Plus a matching file tree, milestone-grouped GitHub issues, and a README draft �
 
 A **template** describes a project category (Flashcard App, Habit Tracker, and so on) as a set of selectable features. Each feature declares the screens, components, data models, GitHub issues, and learning notes it contributes. The generator engine merges the features you select into one `ProjectMap` — the core object connecting all of it together.
 
-Templates live in `src/templates/` and are plain TypeScript objects implementing the `ProjectTemplate` type from `src/core/types.ts`. The generator engine itself (`src/core/`) has no UI dependencies, so it can be tested and reused independently of the web app.
+Templates live in `src/templates/` and are plain TypeScript objects implementing the `ProjectTemplate` type from `src/core/types.ts`. Custom (start-from-scratch) projects go through the same `ProjectMap` pipeline: `src/core/blocks.ts` expands the things and building blocks you choose into the same feature shape a hand-authored template uses, so nothing downstream needs to know the difference. The generator engine (`src/core/`) has no UI dependencies, so it can be tested and reused independently of the web app.
 
 ## How to contribute a template
 
@@ -83,10 +90,10 @@ You don't need to touch the UI to add a template — the wizard and project map 
 
 CodeMap's core idea — **idea → project map → buildable app** — stays fixed even as the implementation evolves. Planned directions:
 
-- More project templates and target stacks (web, CLI)
-- Exporting a generated project as a ready-to-clone scaffold
+- More building blocks and more preset templates
 - A `gh`-friendly export for pushing issues and milestones directly to GitHub
 - Shareable project map links
+- Additional target stacks beyond Next.js
 - Optional AI-assisted customization of a generated map (not required for the core experience)
 
 ## License
