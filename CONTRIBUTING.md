@@ -15,7 +15,10 @@ src/
     map/          Panels that render a generated ProjectMap
     ui/           shadcn/ui primitives
   core/           The generator engine — plain TypeScript, no UI imports
-  templates/      ProjectTemplate definitions, one file per category
+    blocks.ts     Expands builder-defined things + blocks into features
+                  (the "start from scratch" path)
+    scaffold*.ts  Generate a real, runnable project from a ProjectMap
+  templates/      ProjectTemplate definitions, one file per preset category
 ```
 
 The engine (`src/core/`) and the UI (`src/app/`, `src/components/`) are
@@ -46,7 +49,7 @@ features.
    - `milestoneGoals` — one goal sentence per fixed milestone stage (`setup`, `core`, `features`, `polish`)
    - `features` — the selectable building blocks of the category
 3. For each feature, define:
-   - `screens` — with a `routeFile` (its path under the generated app's `app/` directory)
+   - `screens` — with a `routePath` (the URL it lives at, e.g. `/decks/[deckId]/review`); the engine derives the actual file per target stack
    - `components`
    - `dataModels`
    - `issues` — each with `tasks`, `acceptanceCriteria`, and optionally `conceptIds` linking to that feature's learning notes
@@ -60,6 +63,19 @@ features.
 Mark a feature `core: true` if it should be pre-selected by default — this
 should be the minimum feature set needed for a working first version of that
 project type.
+
+## Adding or improving a building block
+
+The "start from scratch" path doesn't use templates — a builder names their
+own things (nouns like Deck, Habit, Event) and picks building blocks (list,
+detail, create, edit & delete, mark done, stats). Each `(thing, block)` pair
+is expanded into a `FeatureDef` by `src/core/blocks.ts`, so it flows through
+the same `generateProjectMap` pipeline a template does. Also see
+`src/core/scaffoldPages.ts`, which classifies a screen by name (does it end
+in " List", start with "Create ", and so on) and generates a real, runnable
+page for it — a new block should keep that naming convention if you want the
+scaffold generator to produce real code for it, rather than a generic
+TODO-commented placeholder.
 
 ## Improving generated content
 
