@@ -280,3 +280,9 @@ export interface ProjectMap {
   taskSplit?: TaskArea[];
   gettingStarted: GettingStartedSpec;
 }
+
+/** One file in a generated, runnable project scaffold. */
+export interface ScaffoldFile {
+  path: string;
+  contents: string;
+}
