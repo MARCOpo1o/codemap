@@ -1,6 +1,12 @@
 import { pluralize } from "./naming";
 import { storageKey } from "./scaffoldData";
-import { childModelsOf, primaryDisplayField, referencedModel, toTsType } from "./scaffoldFields";
+import {
+  childModelsOf,
+  primaryDisplayField,
+  referencedModel,
+  seedValueForField,
+  toTsType,
+} from "./scaffoldFields";
 import type { ComponentSpec, DataModelSpec, FieldDef, ScaffoldFile, ScreenSpec } from "./types";
 
 type ScreenKind = "list" | "detail" | "create" | "edit" | "generic";
@@ -258,7 +264,7 @@ ${extraLinks}
   return { path: screen.routeFile, contents };
 }
 
-function generateCreatePage(screen: ScreenSpec, model: DataModelSpec): ScaffoldFile {
+function generateCreatePage(screen: ScreenSpec, model: DataModelSpec, dataModels: DataModelSpec[]): ScaffoldFile {
   const key = storageKey(model);
   const routeParams = dynamicSegments(screen.routePath);
   const fields = formFields(model, routeParams);
@@ -293,10 +299,19 @@ function generateCreatePage(screen: ScreenSpec, model: DataModelSpec): ScaffoldF
     })
     .join("\n");
 
-  const fkAssignments =
-    routeParams.length > 0
-      ? `\n${routeParams.map((param) => `      ${param}: params.${param},`).join("\n")}`
-      : "";
+  const formFieldNames = new Set(fields.map((field) => field.name));
+  const otherFields = model.fields.filter(
+    (field) => field.name !== "id" && !formFieldNames.has(field.name)
+  );
+  const otherAssignments = otherFields
+    .map((field) => {
+      if (routeParams.includes(field.name)) return `      ${field.name}: params.${field.name},`;
+      if (field.name === "createdAt") return `      createdAt: new Date().toISOString(),`;
+      if (field.name === "isDone") return `      isDone: false,`;
+      return `      ${field.name}: ${JSON.stringify(seedValueForField(model, field, dataModels))},`;
+    })
+    .join("\n");
+  const extraAssignments = otherAssignments ? `\n${otherAssignments}` : "";
 
   const contents = `"use client";
 // ${screen.name} — ${screen.purpose}
@@ -316,8 +331,7 @@ ${paramsDeclaration(screen.routePath)}  const [form, setForm] = useState({ ${sta
     const existing = getAll<${model.name}>("${key}", []);
     const newItem: ${model.name} = {
       id: crypto.randomUUID(),
-      ...form,${fkAssignments}
-      createdAt: new Date().toISOString(),
+      ...form,${extraAssignments}
     };
     saveAll("${key}", [...existing, newItem]);
     router.back();
@@ -473,7 +487,7 @@ export function generatePages(
 
     if (kind === "list" && model) return generateListPage(screen, model, index, dataModels);
     if (kind === "detail" && model) return generateDetailPage(screen, model, index, dataModels);
-    if (kind === "create" && model) return generateCreatePage(screen, model);
+    if (kind === "create" && model) return generateCreatePage(screen, model, dataModels);
     if (kind === "edit" && model) return generateEditPage(screen, model, index);
     return generateGenericPage(screen);
   });
